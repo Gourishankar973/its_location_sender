@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bus Location Updater</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input {
+      padding: 5px;
+      margin-top: 5px;
+      width: 200px;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bus Location Updater</h1>
+  
+  <label for="user_id">User ID:</label>
+  <input type="text" id="user_id" placeholder="Enter User ID" required>
+  
+  <label for="bus_id">Bus ID:</label>
+  <input type="text" id="bus_id" placeholder="Enter Bus ID" required>
+  
+  <br>
+  <button id="startBtn">Start Sending Location</button>
+  <button id="stopBtn" disabled>Stop Sending Location</button>
+  
+  <script>
+    let intervalId = null;
+    
+    function sendLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const user_id = document.getElementById("user_id").value;
+          const bus_id = document.getElementById("bus_id").value;
+          
+          const data = { user_id, bus_id, lat, lon };
+          
+          fetch("/update_bus_location", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+          })
+          .then(response => response.json())
+          .then(result => {
+            console.log("Location update result:", result);
+          })
+          .catch(error => {
+            console.error("Error updating location:", error);
+          });
+        }, function(error) {
+          console.error("Error obtaining geolocation:", error);
+        });
+      } else {
+        alert("Geolocation is not supported by your browser.");
+      }
+    }
+    
+    document.getElementById("startBtn").addEventListener("click", function() {
+      const user_id = document.getElementById("user_id").value;
+      const bus_id = document.getElementById("bus_id").value;
+      if (!user_id || !bus_id) {
+        alert("Please enter both User ID and Bus ID.");
+        return;
+      }
+      intervalId = setInterval(sendLocation, 5000);  // send location every 5 seconds
+      document.getElementById("startBtn").disabled = true;
+      document.getElementById("stopBtn").disabled = false;
+    });
+    
+    document.getElementById("stopBtn").addEventListener("click", function() {
+      clearInterval(intervalId);
+      document.getElementById("startBtn").disabled = false;
+      document.getElementById("stopBtn").disabled = true;
+    });
+  </script>
+</body>
+</html>
