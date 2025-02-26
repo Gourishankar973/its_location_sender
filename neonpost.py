@@ -155,6 +155,26 @@ def delete_bus_location_by_user(user_id):
     finally:
         cur.close()
         conn.close()
+        
+def delete_bus_location_by_id(bus_id):
+    try:
+        conn = psycopg2.connect(conpass)
+        cur = conn.cursor()
+        query = "DELETE FROM bus_location WHERE bus_id = %s;"
+        cur.execute(query, (bus_id,))
+        conn.commit()
+        print(f"Records for bus_id {bus_id} deleted successfully.")
+        
+    except Exception as e:
+        print(f"Error deleting records: {e}")
+    
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close() 
+
+
 
 #number of people currently in a bus
 def get_user_count_in_bus(bus_id):
@@ -214,3 +234,4 @@ def check_user_exists(user_name, user_password):
 # print(check_user_exists('a', '1234'))
 # print(get_closest_bus_stop(76.409556,9.9635778))
 # print(connection_test())
+# insert_bus_location('BUS101', 1, 76.42007475535118,  9.971313713318702)

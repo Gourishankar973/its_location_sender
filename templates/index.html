@@ -84,6 +84,22 @@
     
     document.getElementById("stopBtn").addEventListener("click", function() {
       clearInterval(intervalId);
+      
+      // Call the new route to delete bus location records from the server.
+      const bus_id = document.getElementById("bus_id").value;
+      fetch("/stop_tracking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bus_id })
+      })
+      .then(response => response.json())
+      .then(result => {
+        console.log("Stop tracking result:", result);
+      })
+      .catch(error => {
+        console.error("Error stopping tracking:", error);
+      });
+      
       document.getElementById("startBtn").disabled = false;
       document.getElementById("stopBtn").disabled = true;
     });
