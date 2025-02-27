@@ -39,37 +39,47 @@
   
   <script>
     let intervalId = null;
-    
+
+    // Function to send the location to the server every 5 seconds.
     function sendLocation() {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          const user_id = document.getElementById("user_id").value;
-          const bus_id = document.getElementById("bus_id").value;
-          
-          const data = { user_id, bus_id, lat, lon };
-          
-          fetch("/update_bus_location", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-          })
-          .then(response => response.json())
-          .then(result => {
-            console.log("Location update result:", result);
-          })
-          .catch(error => {
-            console.error("Error updating location:", error);
-          });
-        }, function(error) {
-          console.error("Error obtaining geolocation:", error);
-        });
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const user_id = document.getElementById("user_id").value;
+            const bus_id = document.getElementById("bus_id").value;
+            
+            const data = { user_id, bus_id, lat, lon };
+
+            fetch("/update_bus_location", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+              console.log("Location update result:", result);
+            })
+            .catch(error => {
+              console.error("Error updating location:", error);
+            });
+          },
+          function(error) {
+            console.error("Error obtaining geolocation:", error);
+          },
+          {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 5000  // Set timeout to 5 seconds for each request
+          }
+        );
       } else {
         alert("Geolocation is not supported by your browser.");
       }
     }
-    
+
+    // Start sending location every 5 seconds.
     document.getElementById("startBtn").addEventListener("click", function() {
       const user_id = document.getElementById("user_id").value;
       const bus_id = document.getElementById("bus_id").value;
@@ -77,15 +87,18 @@
         alert("Please enter both User ID and Bus ID.");
         return;
       }
-      intervalId = setInterval(sendLocation, 5000);  // send location every 5 seconds
+      // Immediately send one location update
+      sendLocation();
+      // Then set up the interval to call sendLocation every 5 seconds.
+      intervalId = setInterval(sendLocation, 5000);
       document.getElementById("startBtn").disabled = true;
       document.getElementById("stopBtn").disabled = false;
     });
     
+    // Stop sending location updates.
     document.getElementById("stopBtn").addEventListener("click", function() {
       clearInterval(intervalId);
       
-      // Call the new route to delete bus location records from the server.
       const bus_id = document.getElementById("bus_id").value;
       fetch("/stop_tracking", {
         method: "POST",
